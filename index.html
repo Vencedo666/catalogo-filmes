@@ -198,6 +198,7 @@
       position: relative;
       cursor: pointer;
       transition: transform 0.2s;
+      height: 400px;
     }
 
     .card:hover {
@@ -212,47 +213,53 @@
 
     .card-content {
       padding: 15px;
+      height: 100px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .title {
       font-size: 15px;
       font-weight: bold;
       margin: 0 0 8px 0;
-      height: 40px;
+      height: 30px;
       overflow: hidden;
       position: relative;
+      flex-shrink: 0;
     }
 
     .title-text {
       white-space: nowrap;
       display: inline-block;
-    }
-
-    .title-text.scrolling {
-      animation: scroll-text 10s linear infinite;
+      animation: scroll-text 8s linear infinite;
     }
 
     @keyframes scroll-text {
       0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+      50% { transform: translateX(calc(-100% + 170px)); }
+      100% { transform: translateX(0); }
     }
 
     .meta {
-      font-size: 14px;
+      font-size: 12px;
       color: #aaa;
       margin-bottom: 5px;
-      height: 20px;
       overflow: hidden;
-      position: relative;
-    }
-
-    .meta-text {
       white-space: nowrap;
-      display: inline-block;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
     }
 
-    .meta-text.scrolling {
-      animation: scroll-text 8s linear infinite;
+    .description {
+      font-size: 12px;
+      color: #aaa;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      flex: 1;
     }
 
     .star {
@@ -278,19 +285,20 @@
       transform: scale(1.2);
     }
 
-    .description {
-      font-size: 14px;
-      color: #aaa;
-      margin-bottom: 5px;
-    }
-
     .grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 20px;
       padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
+    }
+
+    .grid .card {
+      margin-right: 0;
+      height: 400px;
+    }
+
+    #favoritesSection {
+      display: none;
     }
 
     @media (max-width: 768px) {
@@ -367,7 +375,7 @@
       <input type="text" id="searchInput" placeholder="Pesquisar filmes..." onkeyup="handleSearch()">
       <div class="menu">
         <button onclick="togglePopup()" id="filterBtn">Filtros</button>
-        <button onclick="showFavorites()">Favoritos</button>
+        <button onclick="toggleFavorites()" id="favoritesBtn">Favoritos</button>
       </div>
     </div>
     <div class="popup" id="genrePopup">
@@ -401,7 +409,7 @@
     </div>
   </div>
 
-  <div class="section" id="favoritesSection" style="display: none;">
+  <div class="section" id="favoritesSection">
     <h2>⭐ Meus Favoritos</h2>
     <div class="carousel-container">
       <button class="nav-btn prev" onclick="scrollCarousel('favorites', -1)">‹</button>
@@ -414,7 +422,7 @@
 
   <div class="section">
     <h2>🎬 Catálogo Completo (A - Z)</h2>
-    <div id="catalog" class="grid"></div>
+    <div id="catalogGrid" class="grid"></div>
   </div>
 
   <script>
@@ -424,6 +432,7 @@
     let allItems = [];
     let filteredItems = [];
     let genres = new Set();
+    let showingFavorites = false;
 
     const normalize = str => str.toLowerCase().normalize('NFD').replace(/[^\w\s]|_/g, '').replace(/[\u0300-\u036f]/g, '');
 
@@ -434,42 +443,45 @@
 
     const clearFilters = () => {
       filteredItems = [...allItems];
+      showingFavorites = false;
+      document.getElementById('favoritesSection').style.display = 'none';
       renderAll();
       document.getElementById('searchInput').value = '';
       togglePopup();
     };
 
+    const toggleFavorites = () => {
+      if (showingFavorites) {
+        // Se já está mostrando favoritos, remove o filtro
+        showingFavorites = false;
+        document.getElementById('favoritesSection').style.display = 'none';
+        filteredItems = [...allItems];
+        renderAll();
+      } else {
+        // Mostra apenas favoritos
+        showingFavorites = true;
+        document.getElementById('favoritesSection').style.display = 'block';
+        filteredItems = allItems.filter(item => localStorage.getItem('fav_' + item.titulo));
+        renderAll();
+      }
+    };
+
     const filterByType = type => {
       filteredItems = allItems.filter(item => normalize(item.tipo) === normalize(type));
+      showingFavorites = false;
+      document.getElementById('favoritesSection').style.display = 'none';
       renderAll();
       togglePopup();
     };
 
     const filterByGenre = genre => {
-      filteredItems = allItems.filter(item => item.genero.toLowerCase().includes(genre.toLowerCase()));
+      filteredItems = allItems.filter(item => 
+        item.genero.split(/[,/]/).some(g => normalize(g.trim()) === normalize(genre))
+      );
+      showingFavorites = false;
+      document.getElementById('favoritesSection').style.display = 'none';
       renderAll();
       togglePopup();
-    };
-
-    let showingFavorites = false;
-
-    const showFavorites = () => {
-      const favSection = document.getElementById('favoritesSection');
-      
-      if (showingFavorites) {
-        // Se já está mostrando favoritos, remove o filtro
-        favSection.style.display = 'none';
-        showingFavorites = false;
-        filteredItems = [...allItems];
-        renderAll();
-      } else {
-        // Mostra seção de favoritos e filtra
-        favSection.style.display = 'block';
-        showingFavorites = true;
-        const favItems = allItems.filter(item => localStorage.getItem('fav_' + item.titulo));
-        renderCarousel('favorites', favItems);
-        favSection.scrollIntoView({ behavior: 'smooth' });
-      }
     };
 
     const handleSearch = () => {
@@ -484,6 +496,8 @@
           normalize(item.tipo).includes(query)
         );
       }
+      showingFavorites = false;
+      document.getElementById('favoritesSection').style.display = 'none';
       renderAll();
     };
 
@@ -507,20 +521,6 @@
       }
     };
 
-    const checkTextOverflow = (element) => {
-      // Verifica título
-      const titleElement = element.querySelector('.title-text');
-      if (titleElement && titleElement.scrollWidth > element.querySelector('.title').clientWidth) {
-        titleElement.classList.add('scrolling');
-      }
-      
-      // Verifica gêneros
-      const metaElement = element.querySelector('.meta-text');
-      if (metaElement && metaElement.scrollWidth > element.querySelector('.meta').clientWidth) {
-        metaElement.classList.add('scrolling');
-      }
-    };
-
     const createCard = (item) => {
       const isFavorite = localStorage.getItem('fav_' + item.titulo);
       const card = document.createElement('div');
@@ -539,15 +539,11 @@
           <div class="title">
             <span class="title-text">${item.titulo}</span>
           </div>
-          <div class="meta">
-            <span class="meta-text">${item.tipo} | ${item.genero}</span>
-          </div>
+          <div class="meta">${item.tipo} | ${item.genero}</div>
           <div class="description">${item.descricao}</div>
         </div>`;
       
       card.appendChild(star);
-      
-      setTimeout(() => checkTextOverflow(card.querySelector('.title')), 100);
       
       return card;
     };
@@ -585,7 +581,6 @@
       // Lançamentos recentes (busca por ano na coluna descricao)
       const currentYear = new Date().getFullYear();
       const recentItems = filteredItems.filter(item => {
-        // Busca por padrões de ano: (2024), 2024, "2024"
         const yearMatches = item.descricao.match(/(?:\(|\s|^)(\d{4})(?:\)|\s|$)/g);
         if (yearMatches) {
           const years = yearMatches.map(match => parseInt(match.replace(/\D/g, '')));
@@ -595,22 +590,28 @@
       });
       renderCarousel('recent', recentItems);
       
-      // Catálogo completo em ordem alfabética (agora como grid)
-      const sortedItems = [...filteredItems].sort((a, b) => a.titulo.localeCompare(b.titulo));
-      renderGrid('catalog', sortedItems);
+      // Favoritos (só renderiza se estiver mostrando)
+      if (showingFavorites) {
+        const favItems = filteredItems.filter(item => localStorage.getItem('fav_' + item.titulo));
+        renderCarousel('favorites', favItems);
+      }
 
       // Gêneros (apenas para itens filtrados)
       renderByGenre(filteredItems);
+
+      // Catálogo completo em ordem alfabética
+      const sortedItems = [...filteredItems].sort((a, b) => a.titulo.localeCompare(b.titulo));
+      renderGrid('catalogGrid', sortedItems);
     };
 
     const renderByGenre = (items) => {
       const byGenre = {};
       items.forEach(item => {
-        // Separa gêneros por "/" e ","
-        const genres = item.genero.split(/[\/,]/).map(g => g.trim()).filter(g => g);
-        genres.forEach(genre => {
-          if (!byGenre[genre]) byGenre[genre] = [];
-          byGenre[genre].push(item);
+        // Separa por vírgula E por barra
+        const genresList = item.genero.split(/[,/]/).map(g => g.trim());
+        genresList.forEach(genre => {
+          if (genre && !byGenre[genre]) byGenre[genre] = [];
+          if (genre) byGenre[genre].push(item);
         });
       });
 
@@ -683,16 +684,18 @@
 
         allItems = dataRows.map(row => {
           const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
-          if (titulo && tipo && genero) { // Só adiciona se tiver dados essenciais
-            // Separa gêneros por "/" e "," para adicionar à lista
-            const genres = genero.split(/[\/,]/).map(g => g.trim()).filter(g => g);
-            genres.forEach(g => genres.add(g));
+          if (titulo && tipo && genero) {
+            // Adiciona gêneros separados por vírgula E por barra
+            genero.split(/[,/]/).forEach(g => {
+              const trimmedGenre = g.trim();
+              if (trimmedGenre) genres.add(trimmedGenre);
+            });
             return { titulo, tipo, genero, banner, descricao, link };
           }
           return null;
-        }).filter(item => item !== null).reverse(); // Remove itens nulos e reverte
+        }).filter(item => item !== null).reverse();
 
-        filteredItems = [...allItems]; // Inicializa sem filtros
+        filteredItems = [...allItems];
 
         // Adiciona botões de gênero ao popup
         const genreButtonsContainer = document.getElementById('genreButtons');
