@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo de Filmes</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #111; color: #fff; margin: 0; padding: 20px; }
+    h1 { text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+    .card { background: #222; border-radius: 10px; overflow: hidden; transition: transform 0.2s; cursor: pointer; }
+    .card:hover { transform: scale(1.03); }
+    .card img { width: 100%; height: 300px; object-fit: cover; }
+    .card-content { padding: 10px; }
+    .title { font-size: 16px; font-weight: bold; margin: 0 0 5px 0; }
+    .meta { font-size: 14px; color: #aaa; }
+    .description { font-size: 13px; margin-top: 5px; color: #ccc; }
+  </style>
+</head>
+<body>
+  <h1>🎬 Meu Catálogo de Filmes</h1>
+  <div id="catalog" class="grid"></div>
+
+  <script>
+    const sheetId = '1zWKuIBt1Fy2c-CZ2MjZsuWWtBRn8jDq3Uh4KUI7EGPk';
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(text => {
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+        const catalog = document.getElementById('catalog');
+
+        rows.forEach(row => {
+          const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.onclick = () => window.open(link, '_blank');
+
+          card.innerHTML = `
+            <img src="${banner}" alt="${titulo}" />
+            <div class="card-content">
+              <div class="title">${titulo}</div>
+              <div class="meta">${tipo} | ${genero}</div>
+              <div class="description">${descricao}</div>
+            </div>
+          `;
+
+          catalog.appendChild(card);
+        });
+      })
+      .catch(err => {
+        document.getElementById('catalog').innerHTML = '<p>Erro ao carregar catálogo.</p>';
+        console.error('Erro:', err);
+      });
+  </script>
+</body>
+</html>
