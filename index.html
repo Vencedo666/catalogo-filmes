@@ -5,112 +5,306 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2KO VIP - Catálogo de Filmes</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #111; color: #fff; margin: 0; padding: 0; }
-    header { display: flex; align-items: center; justify-content: space-between; background: #000; padding: 10px 20px; }
-    header img { height: 50px; }
-    h1 { text-align: center; font-size: 24px; margin: 10px 0; }
-    .filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; }
-    .filter-btn { background: #222; color: #fff; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-    .filter-btn:hover { background: #555; }
-    .search { width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; background: #222; color: white; border: none; }
-    .carousel { overflow-x: auto; white-space: nowrap; padding: 20px 10px; }
-    .carousel::-webkit-scrollbar { display: none; }
-    .card { display: inline-block; background: #222; border-radius: 10px; overflow: hidden; transition: transform 0.2s; cursor: pointer; width: 200px; margin-right: 10px; position: relative; }
-    .card:hover { transform: scale(1.03); }
-    .card img { width: 100%; height: 300px; object-fit: cover; }
-    .card-content { padding: 10px; }
-    .title { font-size: 16px; font-weight: bold; margin: 0 0 5px 0; }
-    .meta { font-size: 14px; color: #aaa; }
-    .description { font-size: 13px; margin-top: 5px; color: #ccc; }
-    .favorite { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; background-color: rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; }
-    .favorite.active { background-color: yellow; border: 2px solid white; box-shadow: 0 0 0 1px black; }
+    :root {
+      --bg-main: #f1c40f;
+      --text-light: #fff;
+      --card-bg: #222;
+      --card-hover: #333;
+      --star-default: rgba(255, 255, 255, 0.3);
+      --star-favorite: #ff0;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: var(--text-light);
+    }
+
+    header {
+      background-color: var(--bg-main);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    .menu {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .menu button {
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .popup {
+      display: none;
+      position: absolute;
+      top: 60px;
+      left: 20px;
+      background: #000;
+      border: 1px solid #fff;
+      padding: 10px;
+      z-index: 10;
+    }
+
+    .popup button {
+      display: block;
+      width: 100%;
+      margin-bottom: 5px;
+    }
+
+    .carousel {
+      overflow-x: auto;
+      display: flex;
+      scroll-snap-type: x mandatory;
+      padding: 10px;
+    }
+
+    .carousel::-webkit-scrollbar {
+      display: none;
+    }
+
+    .card {
+      flex: 0 0 calc(20% - 10px);
+      margin-right: 10px;
+      background: var(--card-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      scroll-snap-align: start;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.03);
+    }
+
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 10px;
+    }
+
+    .title {
+      font-size: clamp(10px, 2.5vw, 16px);
+      font-weight: bold;
+      margin: 0 0 5px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .meta, .description {
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .star {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 20px;
+      color: var(--star-default);
+      border: 1px solid transparent;
+      border-radius: 50%;
+      padding: 2px;
+    }
+
+    .star.favorited {
+      color: var(--star-favorite);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px #000;
+    }
+
+    @media (max-width: 768px) {
+      .card {
+        flex: 0 0 45%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        flex: 0 0 40%;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
     <img src="photo_4994677211969728445_c.jpg" alt="2KO VIP Logo">
+    <div class="menu">
+      <button onclick="togglePopup()">Filtros</button>
+      <button onclick="clearFilters()">Remover Filtros</button>
+      <button onclick="filterByType('Filme')">Filmes</button>
+      <button onclick="filterByType('Série')">Séries</button>
+      <button onclick="filterByType('Animes / Donghua')">Animes</button>
+      <button onclick="filterByType('Animação')">Animações</button>
+    </div>
   </header>
-  <input class="search" type="text" id="search" placeholder="Pesquisar..." />
-  <div class="filters" id="genreFilters"></div>
-  <h1>🎬 Últimos Adicionados</h1>
+  <div class="popup" id="genrePopup"></div>
+  <h2 style="padding: 10px">🎬 Últimos Adicionados</h2>
   <div id="catalog" class="carousel"></div>
+  <h2 style="padding: 10px">📅 Lançamentos Recentes</h2>
+  <div id="byYear" class="carousel"></div>
+  <h2 style="padding: 10px">⭐ Meus Favoritos</h2>
+  <div id="favorites" class="carousel"></div>
+  <div id="byGenreContainer"></div>
 
   <script>
     const sheetId = '1zWKuIBt1Fy2c-CZ2MjZsuWWtBRn8jDq3Uh4KUI7EGPk';
     const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
-    const normalize = str => str.normalize("NFD").replace(/[^\w\s]|_/g, "").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+    let allItems = [];
+    let genres = new Set();
+
+    const normalize = str => str.toLowerCase().normalize('NFD').replace(/[^\w\s]|_/g, '').replace(/[\u0300-\u036f]/g, '');
+
+    const togglePopup = () => {
+      const popup = document.getElementById('genrePopup');
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    };
+
+    const clearFilters = () => {
+      render(allItems);
+    };
+
+    const filterByType = type => {
+      const filtered = allItems.filter(item => normalize(item.tipo) === normalize(type));
+      render(filtered);
+    };
+
+    const renderCarousel = (containerId, items) => {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      items.forEach(item => {
+        const isFavorite = localStorage.getItem(item.titulo);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.onclick = () => window.open(item.link, '_blank');
+        const star = document.createElement('span');
+        star.className = 'star';
+        star.innerHTML = '★';
+        if (isFavorite) star.classList.add('favorited');
+        star.onclick = e => {
+          e.stopPropagation();
+          star.classList.toggle('favorited');
+          if (localStorage.getItem(item.titulo)) {
+            localStorage.removeItem(item.titulo);
+          } else {
+            localStorage.setItem(item.titulo, true);
+          }
+        };
+        card.innerHTML = `
+          <img src="${item.banner}" alt="${item.titulo}" />
+          <div class="card-content">
+            <div class="title">${item.titulo}</div>
+            <div class="meta">${item.tipo} | ${item.genero}</div>
+            <div class="description">${item.descricao}</div>
+          </div>`;
+        card.appendChild(star);
+        container.appendChild(card);
+      });
+    };
+
+    const render = items => {
+      renderCarousel('catalog', items);
+      renderCarousel('favorites', items.filter(i => localStorage.getItem(i.titulo)));
+      renderCarousel('byYear', items.filter(i => i.descricao.match(/20\d{2}/)));
+
+      const byGenre = {};
+      items.forEach(i => {
+        i.genero.split(',').forEach(g => {
+          const genre = g.trim();
+          if (!byGenre[genre]) byGenre[genre] = [];
+          byGenre[genre].push(i);
+        });
+      });
+      const container = document.getElementById('byGenreContainer');
+      container.innerHTML = '';
+      Object.entries(byGenre).forEach(([genre, items]) => {
+        if (items.length >= 3) {
+          const title = document.createElement('h2');
+          title.style.padding = '10px';
+          title.textContent = genre;
+          const carousel = document.createElement('div');
+          carousel.className = 'carousel';
+          items.forEach(item => {
+            const isFavorite = localStorage.getItem(item.titulo);
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => window.open(item.link, '_blank');
+            const star = document.createElement('span');
+            star.className = 'star';
+            star.innerHTML = '★';
+            if (isFavorite) star.classList.add('favorited');
+            star.onclick = e => {
+              e.stopPropagation();
+              star.classList.toggle('favorited');
+              if (localStorage.getItem(item.titulo)) {
+                localStorage.removeItem(item.titulo);
+              } else {
+                localStorage.setItem(item.titulo, true);
+              }
+            };
+            card.innerHTML = `
+              <img src="${item.banner}" alt="${item.titulo}" />
+              <div class="card-content">
+                <div class="title">${item.titulo}</div>
+                <div class="meta">${item.tipo} | ${item.genero}</div>
+                <div class="description">${item.descricao}</div>
+              </div>`;
+            card.appendChild(star);
+            carousel.appendChild(card);
+          });
+          container.appendChild(title);
+          container.appendChild(carousel);
+        }
+      });
+    };
 
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows.slice(1).reverse();
-        const catalog = document.getElementById('catalog');
-        const genresSet = new Set();
-        const allCards = [];
+        const rows = json.table.rows.slice(1);
 
-        rows.forEach(row => {
+        allItems = rows.reverse().map(row => {
           const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
-          const normalizedDesc = String(descricao);
-
-          const genres = genero.split(',').map(g => g.trim());
-          genres.forEach(g => genresSet.add(g));
-
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.dataset.title = normalize(titulo);
-          card.dataset.generos = normalize(genero);
-
-          const fav = document.createElement('div');
-          fav.className = 'favorite';
-          if (favorites.includes(link)) fav.classList.add('active');
-          fav.innerHTML = '⭐';
-          fav.onclick = e => {
-            e.stopPropagation();
-            fav.classList.toggle('active');
-            const idx = favorites.indexOf(link);
-            if (idx > -1) favorites.splice(idx, 1);
-            else favorites.push(link);
-            localStorage.setItem("favorites", JSON.stringify(favorites));
-          };
-
-          card.onclick = () => window.open(link, '_blank');
-
-          card.innerHTML = `
-            <img src="${banner}" alt="${titulo}" />
-            <div class="card-content">
-              <div class="title">${titulo}</div>
-              <div class="meta">${tipo} | ${genero}</div>
-              <div class="description">${normalizedDesc}</div>
-            </div>
-          `;
-          card.appendChild(fav);
-          catalog.appendChild(card);
-          allCards.push(card);
+          genero.split(',').forEach(g => genres.add(g.trim()));
+          return { titulo, tipo, genero, banner, descricao, link };
         });
 
-        const genreFilters = document.getElementById('genreFilters');
-        [...genresSet].sort().forEach(g => {
+        const popup = document.getElementById('genrePopup');
+        genres.forEach(g => {
           const btn = document.createElement('button');
-          btn.className = 'filter-btn';
           btn.textContent = g;
           btn.onclick = () => {
-            allCards.forEach(card => {
-              card.style.display = card.dataset.generos.includes(normalize(g)) ? 'inline-block' : 'none';
-            });
+            const filtered = allItems.filter(i => i.genero.toLowerCase().includes(g.toLowerCase()));
+            render(filtered);
           };
-          genreFilters.appendChild(btn);
+          popup.appendChild(btn);
         });
 
-        document.getElementById('search').addEventListener('input', e => {
-          const val = normalize(e.target.value);
-          allCards.forEach(card => {
-            const match = card.dataset.title.includes(val) || card.dataset.generos.includes(val);
-            card.style.display = match ? 'inline-block' : 'none';
-          });
-        });
+        render(allItems);
       })
       .catch(err => {
         document.getElementById('catalog').innerHTML = '<p>Erro ao carregar catálogo.</p>';
