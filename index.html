@@ -6,7 +6,7 @@
   <title>2KO VIP - Catálogo de Filmes</title>
   <style>
     :root {
-      --bg-main: #f1c40f;
+      --bg-main: #ffcc00; /* Novo tom de dourado aproximado da imagem */
       --text-light: #fff;
       --card-bg: #222;
       --card-hover: #333;
@@ -59,12 +59,31 @@
       border: 1px solid #fff;
       padding: 10px;
       z-index: 10;
+      max-height: 80vh;
+      overflow-y: auto;
     }
 
     .popup button {
       display: block;
       width: 100%;
       margin-bottom: 5px;
+    }
+
+    .popup hr {
+      border: none;
+      border-top: 1px solid #555;
+      margin: 10px 0;
+    }
+
+    .popup .close-btn {
+      background: red;
+      color: white;
+      padding: 5px;
+      font-weight: bold;
+      border-radius: 3px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
     }
 
     .carousel {
@@ -124,15 +143,13 @@
       right: 5px;
       font-size: 20px;
       color: var(--star-default);
-      border: 1px solid transparent;
-      border-radius: 50%;
+      border: 2px solid #fff;
+      border-radius: 0;
       padding: 2px;
     }
 
     .star.favorited {
       color: var(--star-favorite);
-      border: 2px solid #fff;
-      box-shadow: 0 0 0 1px #000;
     }
 
     @media (max-width: 768px) {
@@ -153,14 +170,19 @@
     <img src="photo_4994677211969728445_c.jpg" alt="2KO VIP Logo">
     <div class="menu">
       <button onclick="togglePopup()">Filtros</button>
-      <button onclick="clearFilters()">Remover Filtros</button>
-      <button onclick="filterByType('Filme')">Filmes</button>
-      <button onclick="filterByType('Série')">Séries</button>
-      <button onclick="filterByType('Animes / Donghua')">Animes</button>
-      <button onclick="filterByType('Animação')">Animações</button>
+      <button onclick="showFavorites()">Favoritos</button>
     </div>
   </header>
-  <div class="popup" id="genrePopup"></div>
+  <div class="popup" id="genrePopup">
+    <div class="close-btn" onclick="togglePopup()">X Fechar</div>
+    <button onclick="clearFilters()">Remover Filtros</button>
+    <hr>
+    <button onclick="filterByType('Filme')">Filmes</button>
+    <button onclick="filterByType('Série')">Séries</button>
+    <button onclick="filterByType('Animes / Donghua')">Animes</button>
+    <button onclick="filterByType('Animação')">Animações</button>
+    <hr>
+  </div>
   <h2 style="padding: 10px">🎬 Últimos Adicionados</h2>
   <div id="catalog" class="carousel"></div>
   <h2 style="padding: 10px">📅 Lançamentos Recentes</h2>
@@ -192,8 +214,17 @@
       render(filtered);
     };
 
+    const showFavorites = () => {
+      const favItems = allItems.filter(i => localStorage.getItem(i.titulo));
+      render(favItems);
+    };
+
     const renderCarousel = (containerId, items) => {
       const container = document.getElementById(containerId);
+      if (!items || items.length === 0) {
+        container.innerHTML = '<p>Nenhum item encontrado.</p>';
+        return;
+      }
       container.innerHTML = '';
       items.forEach(item => {
         const isFavorite = localStorage.getItem(item.titulo);
