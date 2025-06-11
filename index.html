@@ -215,10 +215,10 @@
     }
 
     .title {
-      font-size: 18px;
+      font-size: 15px;
       font-weight: bold;
       margin: 0 0 8px 0;
-      height: 50px;
+      height: 40px;
       overflow: hidden;
       position: relative;
     }
@@ -237,10 +237,22 @@
       100% { transform: translateX(-100%); }
     }
 
-    .meta, .description {
+    .meta {
       font-size: 14px;
       color: #aaa;
       margin-bottom: 5px;
+      height: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .meta-text {
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    .meta-text.scrolling {
+      animation: scroll-text 8s linear infinite;
     }
 
     .star {
@@ -266,11 +278,19 @@
       transform: scale(1.2);
     }
 
+    .description {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 5px;
+    }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
       padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
     @media (max-width: 768px) {
@@ -373,15 +393,6 @@
   </div>
 
   <div class="section">
-    <h2>🎬 Catálogo Completo</h2>
-    <div class="carousel-container">
-      <button class="nav-btn prev" onclick="scrollCarousel('catalog', -1)">‹</button>
-      <div id="catalog" class="carousel"></div>
-      <button class="nav-btn next" onclick="scrollCarousel('catalog', 1)">›</button>
-    </div>
-  </div>
-
-  <div class="section">
     <h2>🎭 Lançamentos Recentes</h2>
     <div class="carousel-container">
       <button class="nav-btn prev" onclick="scrollCarousel('recent', -1)">‹</button>
@@ -390,7 +401,7 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="favoritesSection" style="display: none;">
     <h2>⭐ Meus Favoritos</h2>
     <div class="carousel-container">
       <button class="nav-btn prev" onclick="scrollCarousel('favorites', -1)">‹</button>
@@ -400,6 +411,11 @@
   </div>
 
   <div id="byGenreContainer"></div>
+
+  <div class="section">
+    <h2>🎬 Catálogo Completo (A - Z)</h2>
+    <div id="catalog" class="grid"></div>
+  </div>
 
   <script>
     const sheetId = '1zWKuIBt1Fy2c-CZ2MjZsuWWtBRn8jDq3Uh4KUI7EGPk';
@@ -435,9 +451,25 @@
       togglePopup();
     };
 
+    let showingFavorites = false;
+
     const showFavorites = () => {
-      filteredItems = allItems.filter(item => localStorage.getItem('fav_' + item.titulo));
-      renderAll();
+      const favSection = document.getElementById('favoritesSection');
+      
+      if (showingFavorites) {
+        // Se já está mostrando favoritos, remove o filtro
+        favSection.style.display = 'none';
+        showingFavorites = false;
+        filteredItems = [...allItems];
+        renderAll();
+      } else {
+        // Mostra seção de favoritos e filtra
+        favSection.style.display = 'block';
+        showingFavorites = true;
+        const favItems = allItems.filter(item => localStorage.getItem('fav_' + item.titulo));
+        renderCarousel('favorites', favItems);
+        favSection.scrollIntoView({ behavior: 'smooth' });
+      }
     };
 
     const handleSearch = () => {
@@ -476,9 +508,16 @@
     };
 
     const checkTextOverflow = (element) => {
-      const textElement = element.querySelector('.title-text');
-      if (textElement.scrollWidth > element.clientWidth) {
-        textElement.classList.add('scrolling');
+      // Verifica título
+      const titleElement = element.querySelector('.title-text');
+      if (titleElement && titleElement.scrollWidth > element.querySelector('.title').clientWidth) {
+        titleElement.classList.add('scrolling');
+      }
+      
+      // Verifica gêneros
+      const metaElement = element.querySelector('.meta-text');
+      if (metaElement && metaElement.scrollWidth > element.querySelector('.meta').clientWidth) {
+        metaElement.classList.add('scrolling');
       }
     };
 
@@ -500,7 +539,9 @@
           <div class="title">
             <span class="title-text">${item.titulo}</span>
           </div>
-          <div class="meta">${item.tipo} | ${item.genero}</div>
+          <div class="meta">
+            <span class="meta-text">${item.tipo} | ${item.genero}</span>
+          </div>
           <div class="description">${item.descricao}</div>
         </div>`;
       
@@ -541,9 +582,6 @@
       // Últimos adicionados (primeiros 20 da lista reversa)
       renderCarousel('latest', filteredItems.slice(0, 20));
       
-      // Catálogo completo (agora como carrossel)
-      renderCarousel('catalog', filteredItems);
-      
       // Lançamentos recentes (busca por ano na coluna descricao)
       const currentYear = new Date().getFullYear();
       const recentItems = filteredItems.filter(item => {
@@ -557,9 +595,9 @@
       });
       renderCarousel('recent', recentItems);
       
-      // Favoritos
-      const favItems = filteredItems.filter(item => localStorage.getItem('fav_' + item.titulo));
-      renderCarousel('favorites', favItems);
+      // Catálogo completo em ordem alfabética (agora como grid)
+      const sortedItems = [...filteredItems].sort((a, b) => a.titulo.localeCompare(b.titulo));
+      renderGrid('catalog', sortedItems);
 
       // Gêneros (apenas para itens filtrados)
       renderByGenre(filteredItems);
@@ -568,8 +606,9 @@
     const renderByGenre = (items) => {
       const byGenre = {};
       items.forEach(item => {
-        item.genero.split(',').forEach(g => {
-          const genre = g.trim();
+        // Separa gêneros por "/" e ","
+        const genres = item.genero.split(/[\/,]/).map(g => g.trim()).filter(g => g);
+        genres.forEach(genre => {
           if (!byGenre[genre]) byGenre[genre] = [];
           byGenre[genre].push(item);
         });
@@ -645,7 +684,9 @@
         allItems = dataRows.map(row => {
           const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
           if (titulo && tipo && genero) { // Só adiciona se tiver dados essenciais
-            genero.split(',').forEach(g => genres.add(g.trim()));
+            // Separa gêneros por "/" e "," para adicionar à lista
+            const genres = genero.split(/[\/,]/).map(g => g.trim()).filter(g => g);
+            genres.forEach(g => genres.add(g));
             return { titulo, tipo, genero, banner, descricao, link };
           }
           return null;
