@@ -10,8 +10,8 @@
       --text-light: #fff;
       --card-bg: #222;
       --card-hover: #333;
-      --star-default: rgba(255, 255, 255, 0.3);
-      --star-favorite: #ff0;
+      --star-default: rgba(128, 128, 128, 0.6);
+      --star-favorite: #ffd700;
     }
 
     body {
@@ -40,68 +40,157 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+      position: relative;
     }
 
     .menu button {
       background-color: #000;
       color: #fff;
       border: none;
-      padding: 5px 10px;
+      padding: 8px 15px;
       cursor: pointer;
       border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .menu button:hover {
+      background-color: #333;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-container input {
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background-color: #fff;
+      color: #000;
+      font-size: 14px;
+      min-width: 200px;
     }
 
     .popup {
       display: none;
       position: absolute;
-      top: 60px;
-      left: 120px;
+      top: 100%;
+      right: 0;
       background: #000;
-      border: 1px solid #fff;
-      padding: 10px;
-      z-index: 10;
-      max-height: 80vh;
+      border: 2px solid #fff;
+      border-radius: 5px;
+      padding: 15px;
+      z-index: 1000;
+      max-height: 400px;
       overflow-y: auto;
+      min-width: 200px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
     }
 
     .popup button {
       display: block;
       width: 100%;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+      padding: 8px;
+      background: #333;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .popup button:hover {
+      background: #555;
     }
 
     .popup hr {
       border: none;
       border-top: 1px solid #555;
-      margin: 10px 0;
+      margin: 15px 0;
     }
 
     .popup .close-btn {
-      background: red;
+      background: #dc3545;
       color: white;
-      padding: 5px;
+      padding: 8px;
       font-weight: bold;
       border-radius: 3px;
       text-align: center;
       cursor: pointer;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .section {
+      margin: 20px 0;
+    }
+
+    .section h2 {
+      padding: 10px 20px;
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .carousel-container {
+      position: relative;
+      padding: 0 50px;
     }
 
     .carousel {
       overflow-x: auto;
       display: flex;
       scroll-snap-type: x mandatory;
-      padding: 10px;
-      position: relative;
+      padding: 10px 0;
+      scroll-behavior: smooth;
     }
 
     .carousel::-webkit-scrollbar {
-      display: none;
+      height: 8px;
+    }
+
+    .carousel::-webkit-scrollbar-track {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    .carousel::-webkit-scrollbar-thumb {
+      background: var(--bg-main);
+      border-radius: 4px;
+    }
+
+    .nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      padding: 15px 12px;
+      cursor: pointer;
+      font-size: 18px;
+      border-radius: 50%;
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(0,0,0,0.9);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .nav-btn.prev {
+      left: 10px;
+    }
+
+    .nav-btn.next {
+      right: 10px;
     }
 
     .card {
-      flex: 0 0 calc(20% - 10px);
-      margin-right: 10px;
+      flex: 0 0 200px;
+      margin-right: 15px;
       background: var(--card-bg);
       border-radius: 10px;
       overflow: hidden;
@@ -112,84 +201,112 @@
     }
 
     .card:hover {
-      transform: scale(1.03);
+      transform: scale(1.05);
     }
 
     .card img {
       width: 100%;
-      height: 200px;
+      height: 300px;
       object-fit: cover;
     }
 
     .card-content {
-      padding: 10px;
+      padding: 15px;
     }
 
     .title {
-      font-size: clamp(10px, 2.5vw, 16px);
+      font-size: 18px;
       font-weight: bold;
-      margin: 0 0 5px 0;
-      white-space: nowrap;
+      margin: 0 0 8px 0;
+      height: 50px;
       overflow: hidden;
-      text-overflow: ellipsis;
-      animation: marquee 8s linear infinite;
+      position: relative;
     }
 
-    @keyframes marquee {
+    .title-text {
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    .title-text.scrolling {
+      animation: scroll-text 10s linear infinite;
+    }
+
+    @keyframes scroll-text {
       0% { transform: translateX(0); }
       100% { transform: translateX(-100%); }
     }
 
     .meta, .description {
-      font-size: 13px;
+      font-size: 14px;
       color: #aaa;
+      margin-bottom: 5px;
     }
 
     .star {
       position: absolute;
-      top: 5px;
-      right: 5px;
-      font-size: 20px;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
       color: var(--star-default);
-      border: none;
-      text-shadow: 1px 1px 2px black;
+      cursor: pointer;
+      z-index: 5;
+      transition: all 0.3s ease;
+      text-shadow: none;
+      -webkit-text-stroke: none;
     }
 
     .star.favorited {
       color: var(--star-favorite);
-      text-shadow: 0 0 4px white, 1px 1px 2px black;
+      -webkit-text-stroke: 2px white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
 
-    .carousel-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0, 0, 0, 0.5);
-      color: white;
-      border: none;
-      font-size: 20px;
-      padding: 5px;
-      cursor: pointer;
-      z-index: 5;
+    .star:hover {
+      transform: scale(1.2);
     }
 
-    .carousel-nav.left {
-      left: 0;
-    }
-
-    .carousel-nav.right {
-      right: 0;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 20px;
     }
 
     @media (max-width: 768px) {
+      .carousel-container {
+        padding: 0 30px;
+      }
+      
       .card {
-        flex: 0 0 45%;
+        flex: 0 0 160px;
+      }
+
+      .search-container input {
+        min-width: 150px;
+      }
+
+      .nav-btn {
+        padding: 10px 8px;
+        font-size: 14px;
       }
     }
 
     @media (max-width: 480px) {
       .card {
-        flex: 0 0 40%;
+        flex: 0 0 140px;
+      }
+
+      .card img {
+        height: 200px;
+      }
+
+      .search-container input {
+        min-width: 120px;
+      }
+
+      .carousel-container {
+        padding: 0 20px;
       }
     }
   </style>
@@ -197,192 +314,319 @@
 <body>
   <header>
     <img src="photo_4994677211969728445_c.jpg" alt="2KO VIP Logo">
-    <div class="menu">
-      <button onclick="togglePopup()">Filtros</button>
-      <button onclick="showFavorites()">Favoritos</button>
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Pesquisar filmes..." onkeyup="handleSearch()">
+      <div class="menu">
+        <button onclick="togglePopup()" id="filterBtn">Filtros</button>
+        <button onclick="showFavorites()">Favoritos</button>
+      </div>
+    </div>
+    <div class="popup" id="genrePopup">
+      <div class="close-btn" onclick="togglePopup()">✕ Fechar</div>
+      <button onclick="clearFilters()">Remover Filtros</button>
+      <hr>
+      <button onclick="filterByType('Filme')">Filmes</button>
+      <button onclick="filterByType('Série')">Séries</button>
+      <button onclick="filterByType('Animes / Donghua')">Animes</button>
+      <button onclick="filterByType('Animação')">Animações</button>
+      <hr>
+      <div id="genreButtons"></div>
     </div>
   </header>
-  <div class="popup" id="genrePopup">
-    <div class="close-btn" onclick="togglePopup()">X Fechar</div>
-    <button onclick="clearFilters()">Remover Filtros</button>
-    <hr>
-    <button onclick="filterByType('Filme')">Filmes</button>
-    <button onclick="filterByType('Série')">Séries</button>
-    <button onclick="filterByType('Animes / Donghua')">Animes</button>
-    <button onclick="filterByType('Animação')">Animações</button>
-    <hr>
+
+  <div class="section">
+    <h2>🎬 Catálogo Completo</h2>
+    <div id="catalog" class="grid"></div>
   </div>
-  <h2 style="padding: 10px">🎬 Últimos Adicionados</h2>
-  <div id="catalog" class="carousel"></div>
-  <h2 style="padding: 10px">📅 Lançamentos Recentes</h2>
-  <div id="byYear" class="carousel"></div>
-  <h2 style="padding: 10px">⭐ Meus Favoritos</h2>
-  <div id="favorites" class="carousel"></div>
+
+  <div class="section">
+    <h2>📅 Últimos Adicionados</h2>
+    <div class="carousel-container">
+      <button class="nav-btn prev" onclick="scrollCarousel('latest', -1)">‹</button>
+      <div id="latest" class="carousel"></div>
+      <button class="nav-btn next" onclick="scrollCarousel('latest', 1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎭 Lançamentos Recentes</h2>
+    <div class="carousel-container">
+      <button class="nav-btn prev" onclick="scrollCarousel('recent', -1)">‹</button>
+      <div id="recent" class="carousel"></div>
+      <button class="nav-btn next" onclick="scrollCarousel('recent', 1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>⭐ Meus Favoritos</h2>
+    <div class="carousel-container">
+      <button class="nav-btn prev" onclick="scrollCarousel('favorites', -1)">‹</button>
+      <div id="favorites" class="carousel"></div>
+      <button class="nav-btn next" onclick="scrollCarousel('favorites', 1)">›</button>
+    </div>
+  </div>
+
   <div id="byGenreContainer"></div>
-<script>
-  const catalog = document.getElementById("catalog");
-  const favoritesCarousel = document.getElementById("favorites");
-  const byYearCarousel = document.getElementById("byYear");
-  const byGenreContainer = document.getElementById("byGenreContainer");
-  const popup = document.getElementById("genrePopup");
 
-  let allItems = [];
-  let showingFavorites = false;
+  <script>
+    const sheetId = '1zWKuIBt1Fy2c-CZ2MjZsuWWtBRn8jDq3Uh4KUI7EGPk';
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
-  async function fetchCatalog() {
-    try {
-      const res = await fetch('catalogo.json'); // atualize para o caminho do seu JSON
-      const data = await res.json();
-      allItems = data.reverse();
-      render(allItems);
-    } catch (err) {
-      catalog.innerHTML = "<p>Erro ao carregar o catálogo.</p>";
-    }
-  }
+    let allItems = [];
+    let filteredItems = [];
+    let genres = new Set();
 
-  function render(items) {
-    catalog.innerHTML = '';
-    favoritesCarousel.innerHTML = '';
-    byYearCarousel.innerHTML = '';
-    byGenreContainer.innerHTML = '';
+    const normalize = str => str.toLowerCase().normalize('NFD').replace(/[^\w\s]|_/g, '').replace(/[\u0300-\u036f]/g, '');
 
-    if (!items.length) {
-      catalog.innerHTML = `<div style="padding:20px;">Nenhum resultado encontrado. <a href="https://t.me/c/2699698393/96" target="_blank">📩 Peça seu filme</a></div>`;
-      return;
-    }
+    const togglePopup = () => {
+      const popup = document.getElementById('genrePopup');
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+    };
 
-    const favorites = items.filter(i => localStorage.getItem(i.titulo));
-    const byYear = groupByYear(items);
-    const byGenre = groupByGenre(items);
+    const clearFilters = () => {
+      filteredItems = [...allItems];
+      renderAll();
+      document.getElementById('searchInput').value = '';
+      togglePopup();
+    };
 
-    items.forEach(item => catalog.appendChild(createCard(item)));
+    const filterByType = type => {
+      filteredItems = allItems.filter(item => normalize(item.tipo) === normalize(type));
+      renderAll();
+      togglePopup();
+    };
 
-    favorites.forEach(item => favoritesCarousel.appendChild(createCard(item)));
+    const filterByGenre = genre => {
+      filteredItems = allItems.filter(item => item.genero.toLowerCase().includes(genre.toLowerCase()));
+      renderAll();
+      togglePopup();
+    };
 
-    Object.entries(byYear).forEach(([year, yearItems]) => {
-      byYearCarousel.appendChild(createCarouselRow(`📅 Lançamentos ${year}`, yearItems));
-    });
+    const showFavorites = () => {
+      filteredItems = allItems.filter(item => localStorage.getItem('fav_' + item.titulo));
+      renderAll();
+    };
 
-    Object.entries(byGenre).forEach(([genre, genreItems]) => {
-      if (genreItems.length >= 3) {
-        byGenreContainer.appendChild(createCarouselRow(`🎭 ${genre}`, genreItems));
-      }
-    });
-  }
-
-  function groupByYear(items) {
-    const years = {};
-    items.forEach(item => {
-      const match = item.descricao.match(/20\d{2}/);
-      if (match) {
-        const year = match[0];
-        if (!years[year]) years[year] = [];
-        years[year].push(item);
-      }
-    });
-    return years;
-  }
-
-  function groupByGenre(items) {
-    const genres = {};
-    items.forEach(item => {
-      item.genero.split(',').forEach(g => {
-        const genre = g.trim();
-        if (!genres[genre]) genres[genre] = [];
-        genres[genre].push(item);
-      });
-    });
-    return genres;
-  }
-
-  function createCard(item) {
-    const div = document.createElement("div");
-    div.className = "card";
-
-    const star = document.createElement("div");
-    star.className = "star";
-    star.innerHTML = "★";
-    if (localStorage.getItem(item.titulo)) {
-      star.classList.add("favorited");
-    }
-
-    star.onclick = (e) => {
-      e.stopPropagation();
-      if (localStorage.getItem(item.titulo)) {
-        localStorage.removeItem(item.titulo);
-        star.classList.remove("favorited");
+    const handleSearch = () => {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      if (query === '') {
+        filteredItems = [...allItems];
       } else {
-        localStorage.setItem(item.titulo, true);
-        star.classList.add("favorited");
+        filteredItems = allItems.filter(item =>
+          item.titulo.toLowerCase().includes(query) ||
+          item.genero.toLowerCase().includes(query) ||
+          item.descricao.toLowerCase().includes(query)
+        );
+      }
+      renderAll();
+    };
+
+    const scrollCarousel = (carouselId, direction) => {
+      const carousel = document.getElementById(carouselId);
+      const scrollAmount = 220 * direction;
+      carousel.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    };
+
+    const toggleFavorite = (item, starElement, event) => {
+      event.stopPropagation();
+      const favKey = 'fav_' + item.titulo;
+      const isFavorite = localStorage.getItem(favKey);
+      
+      if (isFavorite) {
+        localStorage.removeItem(favKey);
+        starElement.classList.remove('favorited');
+      } else {
+        localStorage.setItem(favKey, 'true');
+        starElement.classList.add('favorited');
       }
     };
 
-    div.onclick = () => {
-      window.open(item.link, "_blank");
+    const checkTextOverflow = (element) => {
+      const textElement = element.querySelector('.title-text');
+      if (textElement.scrollWidth > element.clientWidth) {
+        textElement.classList.add('scrolling');
+      }
     };
 
-    div.innerHTML = `
-      <img src="${item.banner}" alt="${item.titulo}">
-      <div class="card-content">
-        <div class="title">${item.titulo}</div>
-        <div class="meta">${item.descricao}</div>
-      </div>
-    `;
-    div.appendChild(star);
-    return div;
-  }
+    const createCard = (item) => {
+      const isFavorite = localStorage.getItem('fav_' + item.titulo);
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.onclick = () => window.open(item.link, '_blank');
 
-  function createCarouselRow(title, items) {
-    const section = document.createElement("section");
-    section.innerHTML = `<h2 style="padding: 10px">${title}</h2>`;
-    const carousel = document.createElement("div");
-    carousel.className = "carousel";
+      const star = document.createElement('span');
+      star.className = 'star';
+      star.innerHTML = '★';
+      if (isFavorite) star.classList.add('favorited');
+      star.onclick = (e) => toggleFavorite(item, star, e);
 
-    const left = document.createElement("button");
-    left.className = "carousel-nav left";
-    left.innerHTML = "⮜";
-    left.onclick = () => carousel.scrollBy({ left: -300, behavior: 'smooth' });
+      card.innerHTML = `
+        <img src="${item.banner}" alt="${item.titulo}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0Ij5JbWFnZW0gbsOjbyBlbmNvbnRyYWRhPC90ZXh0Pgo8L3N2Zz4K'" />
+        <div class="card-content">
+          <div class="title">
+            <span class="title-text">${item.titulo}</span>
+          </div>
+          <div class="meta">${item.tipo} | ${item.genero}</div>
+          <div class="description">${item.descricao}</div>
+        </div>`;
+      
+      card.appendChild(star);
+      
+      setTimeout(() => checkTextOverflow(card.querySelector('.title')), 100);
+      
+      return card;
+    };
 
-    const right = document.createElement("button");
-    right.className = "carousel-nav right";
-    right.innerHTML = "⮞";
-    right.onclick = () => carousel.scrollBy({ left: 300, behavior: 'smooth' });
+    const renderCarousel = (containerId, items) => {
+      const container = document.getElementById(containerId);
+      if (!items || items.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum item encontrado.</p>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      items.forEach(item => {
+        container.appendChild(createCard(item));
+      });
+    };
 
-    items.forEach(i => carousel.appendChild(createCard(i)));
+    const renderGrid = (containerId, items) => {
+      const container = document.getElementById(containerId);
+      if (!items || items.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum item encontrado.</p>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      items.forEach(item => {
+        container.appendChild(createCard(item));
+      });
+    };
 
-    section.appendChild(left);
-    section.appendChild(carousel);
-    section.appendChild(right);
+    const renderAll = () => {
+      // Grid principal
+      renderGrid('catalog', filteredItems);
+      
+      // Últimos adicionados (primeiros 20 da lista reversa)
+      renderCarousel('latest', filteredItems.slice(0, 20));
+      
+      // Lançamentos recentes (filmes dos últimos 3 anos)
+      const currentYear = new Date().getFullYear();
+      const recentItems = filteredItems.filter(item => {
+        const yearMatch = item.descricao.match(/(\d{4})/);
+        if (yearMatch) {
+          const year = parseInt(yearMatch[1]);
+          return year >= currentYear - 3;
+        }
+        return false;
+      });
+      renderCarousel('recent', recentItems);
+      
+      // Favoritos
+      const favItems = filteredItems.filter(item => localStorage.getItem('fav_' + item.titulo));
+      renderCarousel('favorites', favItems);
 
-    return section;
-  }
+      // Gêneros (apenas para itens filtrados)
+      renderByGenre(filteredItems);
+    };
 
-  function togglePopup() {
-    popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-  }
+    const renderByGenre = (items) => {
+      const byGenre = {};
+      items.forEach(item => {
+        item.genero.split(',').forEach(g => {
+          const genre = g.trim();
+          if (!byGenre[genre]) byGenre[genre] = [];
+          byGenre[genre].push(item);
+        });
+      });
 
-  function clearFilters() {
-    render(allItems);
-    togglePopup();
-  }
+      const container = document.getElementById('byGenreContainer');
+      container.innerHTML = '';
+      
+      Object.entries(byGenre).forEach(([genre, genreItems]) => {
+        if (genreItems.length >= 3) {
+          const section = document.createElement('div');
+          section.className = 'section';
+          
+          const title = document.createElement('h2');
+          title.textContent = `🎭 ${genre}`;
+          
+          const carouselContainer = document.createElement('div');
+          carouselContainer.className = 'carousel-container';
+          
+          const prevBtn = document.createElement('button');
+          prevBtn.className = 'nav-btn prev';
+          prevBtn.innerHTML = '‹';
+          prevBtn.onclick = () => {
+            const carousel = carouselContainer.querySelector('.carousel');
+            carousel.scrollBy({ left: -220, behavior: 'smooth' });
+          };
+          
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'nav-btn next';
+          nextBtn.innerHTML = '›';
+          nextBtn.onclick = () => {
+            const carousel = carouselContainer.querySelector('.carousel');
+            carousel.scrollBy({ left: 220, behavior: 'smooth' });
+          };
+          
+          const carousel = document.createElement('div');
+          carousel.className = 'carousel';
+          
+          genreItems.forEach(item => {
+            carousel.appendChild(createCard(item));
+          });
+          
+          carouselContainer.appendChild(prevBtn);
+          carouselContainer.appendChild(carousel);
+          carouselContainer.appendChild(nextBtn);
+          
+          section.appendChild(title);
+          section.appendChild(carouselContainer);
+          container.appendChild(section);
+        }
+      });
+    };
 
-  function filterByType(type) {
-    const filtered = allItems.filter(i => i.tipo === type);
-    render(filtered);
-    togglePopup();
-  }
+    // Click fora fecha popup
+    document.addEventListener('click', (e) => {
+      const popup = document.getElementById('genrePopup');
+      const filterBtn = document.getElementById('filterBtn');
+      if (!popup.contains(e.target) && !filterBtn.contains(e.target)) {
+        popup.style.display = 'none';
+      }
+    });
 
-  function showFavorites() {
-    if (!showingFavorites) {
-      const favItems = allItems.filter(i => localStorage.getItem(i.titulo));
-      render(favItems);
-    } else {
-      render(allItems);
-    }
-    showingFavorites = !showingFavorites;
-  }
+    // Carrega dados
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(text => {
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
 
-  window.onload = fetchCatalog;
-</script>
+        allItems = rows.map(row => {
+          const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
+          genero.split(',').forEach(g => genres.add(g.trim()));
+          return { titulo, tipo, genero, banner, descricao, link };
+        }).reverse(); // Reverse para mostrar últimos adicionados primeiro
+
+        filteredItems = [...allItems];
+
+        // Adiciona botões de gênero ao popup
+        const genreButtonsContainer = document.getElementById('genreButtons');
+        [...genres].sort().forEach(genre => {
+          const btn = document.createElement('button');
+          btn.textContent = genre;
+          btn.onclick = () => filterByGenre(genre);
+          genreButtonsContainer.appendChild(btn);
+        });
+
+        renderAll();
+      })
+      .catch(err => {
+        document.getElementById('catalog').innerHTML = '<p style="text-align: center; color: red; padding: 20px;">Erro ao carregar catálogo.</p>';
+        console.error('Erro:', err);
+      });
+  </script>
 </body>
 </html>
