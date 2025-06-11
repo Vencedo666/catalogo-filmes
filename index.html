@@ -5,165 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2KO VIP - Catálogo de Filmes</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #fff;
-      margin: 0;
-      padding: 20px;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      padding: 20px;
-    }
-    header img {
-      width: 120px;
-      margin-bottom: 10px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .search-filter {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    input[type="text"], select {
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      font-size: 16px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
-      padding: 20px;
-    }
-    .card {
-      background: #222;
-      border-radius: 10px;
-      overflow: hidden;
-      transition: transform 0.2s;
-      cursor: pointer;
-    }
-    .card:hover {
-      transform: scale(1.03);
-    }
-    .card img {
-      width: 100%;
-      height: 300px;
-      object-fit: cover;
-    }
-    .card-content {
-      padding: 10px;
-    }
-    .title {
-      font-size: 16px;
-      font-weight: bold;
-      margin: 0 0 5px 0;
-    }
-    .meta {
-      font-size: 14px;
-      color: #aaa;
-    }
-    .description {
-      font-size: 13px;
-      margin-top: 5px;
-      color: #ccc;
-    }
+    body { font-family: Arial, sans-serif; background-color: #111; color: #fff; margin: 0; padding: 0; }
+    header { display: flex; align-items: center; justify-content: space-between; background: #000; padding: 10px 20px; }
+    header img { height: 50px; }
+    h1 { text-align: center; font-size: 24px; margin: 10px 0; }
+    .filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; }
+    .filter-btn { background: #222; color: #fff; border: 1px solid #555; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .filter-btn:hover { background: #555; }
+    .search { width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; background: #222; color: white; border: none; }
+    .carousel { overflow-x: auto; white-space: nowrap; padding: 20px 10px; }
+    .carousel::-webkit-scrollbar { display: none; }
+    .card { display: inline-block; background: #222; border-radius: 10px; overflow: hidden; transition: transform 0.2s; cursor: pointer; width: 200px; margin-right: 10px; position: relative; }
+    .card:hover { transform: scale(1.03); }
+    .card img { width: 100%; height: 300px; object-fit: cover; }
+    .card-content { padding: 10px; }
+    .title { font-size: 16px; font-weight: bold; margin: 0 0 5px 0; }
+    .meta { font-size: 14px; color: #aaa; }
+    .description { font-size: 13px; margin-top: 5px; color: #ccc; }
+    .favorite { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; background-color: rgba(255,255,255,0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid transparent; }
+    .favorite.active { background-color: yellow; border: 2px solid white; box-shadow: 0 0 0 1px black; }
   </style>
 </head>
 <body>
   <header>
     <img src="photo_4994677211969728445_c.jpg" alt="2KO VIP Logo">
-    <h1>2KO VIP - Catálogo de Filmes</h1>
   </header>
-  <div class="search-filter">
-    <input type="text" id="search" placeholder="Pesquisar...">
-    <select id="filter">
-      <option value="">Todos os Tipos</option>
-      <option value="Filme">Filmes</option>
-      <option value="Anime">Animes / Donghua</option>
-      <option value="Série">Séries</option>
-      <option value="Animação">Animações</option>
-    </select>
-  </div>
-  <div id="catalog" class="grid"></div>
+  <input class="search" type="text" id="search" placeholder="Pesquisar..." />
+  <div class="filters" id="genreFilters"></div>
+  <h1>🎬 Últimos Adicionados</h1>
+  <div id="catalog" class="carousel"></div>
 
   <script>
     const sheetId = '1zWKuIBt1Fy2c-CZ2MjZsuWWtBRn8jDq3Uh4KUI7EGPk';
     const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
-    const normalize = str => str
-      .toLowerCase()
-      .normalize("NFD").replace(/[̀-ͯ]/g, "")
-      .replace(/[\-;]/g, '')
-      .trim();
-
-    let items = [];
+    const normalize = str => str.normalize("NFD").replace(/[^\w\s]|_/g, "").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
 
     fetch(sheetUrl)
       .then(res => res.text())
       .then(text => {
         const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows.slice(1); // Ignora cabeçalho
-        items = rows.map(row => {
+        const rows = json.table.rows.slice(1).reverse();
+        const catalog = document.getElementById('catalog');
+        const genresSet = new Set();
+        const allCards = [];
+
+        rows.forEach(row => {
           const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
-          return { titulo, tipo, genero, banner, descricao, link };
+          const normalizedDesc = String(descricao);
+
+          const genres = genero.split(',').map(g => g.trim());
+          genres.forEach(g => genresSet.add(g));
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.dataset.title = normalize(titulo);
+          card.dataset.generos = normalize(genero);
+
+          const fav = document.createElement('div');
+          fav.className = 'favorite';
+          if (favorites.includes(link)) fav.classList.add('active');
+          fav.innerHTML = '⭐';
+          fav.onclick = e => {
+            e.stopPropagation();
+            fav.classList.toggle('active');
+            const idx = favorites.indexOf(link);
+            if (idx > -1) favorites.splice(idx, 1);
+            else favorites.push(link);
+            localStorage.setItem("favorites", JSON.stringify(favorites));
+          };
+
+          card.onclick = () => window.open(link, '_blank');
+
+          card.innerHTML = `
+            <img src="${banner}" alt="${titulo}" />
+            <div class="card-content">
+              <div class="title">${titulo}</div>
+              <div class="meta">${tipo} | ${genero}</div>
+              <div class="description">${normalizedDesc}</div>
+            </div>
+          `;
+          card.appendChild(fav);
+          catalog.appendChild(card);
+          allCards.push(card);
         });
-        renderCatalog(items);
+
+        const genreFilters = document.getElementById('genreFilters');
+        [...genresSet].sort().forEach(g => {
+          const btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.textContent = g;
+          btn.onclick = () => {
+            allCards.forEach(card => {
+              card.style.display = card.dataset.generos.includes(normalize(g)) ? 'inline-block' : 'none';
+            });
+          };
+          genreFilters.appendChild(btn);
+        });
+
+        document.getElementById('search').addEventListener('input', e => {
+          const val = normalize(e.target.value);
+          allCards.forEach(card => {
+            const match = card.dataset.title.includes(val) || card.dataset.generos.includes(val);
+            card.style.display = match ? 'inline-block' : 'none';
+          });
+        });
       })
       .catch(err => {
         document.getElementById('catalog').innerHTML = '<p>Erro ao carregar catálogo.</p>';
         console.error('Erro:', err);
       });
-
-    function renderCatalog(data) {
-      const catalog = document.getElementById('catalog');
-      catalog.innerHTML = '';
-
-      data.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.onclick = () => window.open(item.link, '_blank');
-
-        card.innerHTML = `
-          <img src="${item.banner}" alt="${item.titulo}" />
-          <div class="card-content">
-            <div class="title">${item.titulo}</div>
-            <div class="meta">${item.tipo} | ${item.genero}</div>
-            <div class="description">${item.descricao}</div>
-          </div>
-        `;
-
-        catalog.appendChild(card);
-      });
-    }
-
-    document.getElementById('search').addEventListener('input', filterItems);
-    document.getElementById('filter').addEventListener('change', filterItems);
-
-    function filterItems() {
-      const searchValue = normalize(document.getElementById('search').value);
-      const filterValue = document.getElementById('filter').value;
-
-      const filtered = items.filter(item => {
-        const isMatch = normalize(item.titulo).includes(searchValue);
-        const tipoMatch = !filterValue ||
-          (filterValue === 'Anime' && ['anime', 'donghua'].includes(normalize(item.tipo))) ||
-          normalize(item.tipo) === normalize(filterValue);
-        return isMatch && tipoMatch;
-      });
-
-      renderCatalog(filtered);
-    }
   </script>
 </body>
 </html>
