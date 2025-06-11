@@ -244,13 +244,20 @@
     }
 
     .title-text.scrolling {
-      animation: scroll-text 8s linear infinite;
+      animation: scroll-title-infinite 12s linear infinite;
     }
 
-    @keyframes scroll-text {
+    @keyframes scroll-title-infinite {
       0% { transform: translateX(0); }
-      50% { transform: translateX(calc(-100% + 170px)); }
-      100% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .title-text.scrolling::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 100%;
+      padding-left: 30px;
+      white-space: nowrap;
     }
 
     .meta {
@@ -271,13 +278,20 @@
     }
 
     .meta-text.scrolling {
-      animation: scroll-meta 10s linear infinite;
+      animation: scroll-meta-infinite 15s linear infinite;
     }
 
-    @keyframes scroll-meta {
+    @keyframes scroll-meta-infinite {
       0% { transform: translateX(0); }
-      50% { transform: translateX(calc(-100% + 170px)); }
-      100% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .meta-text.scrolling::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 100%;
+      padding-left: 30px;
+      white-space: nowrap;
     }
 
     .description {
@@ -338,6 +352,41 @@
       display: none;
     }
 
+    /* Banner de "Faça seu pedido" */
+    .request-banner {
+      background: linear-gradient(135deg, #222, #333);
+      border: 2px solid var(--bg-main);
+      border-radius: 15px;
+      padding: 40px;
+      text-align: center;
+      margin: 40px 20px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .request-banner:hover {
+      transform: scale(1.02);
+    }
+
+    .request-banner img {
+      height: 60px;
+      margin-bottom: 20px;
+    }
+
+    .request-banner h3 {
+      color: var(--bg-main);
+      font-size: 24px;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .request-banner p {
+      color: #aaa;
+      margin: 10px 0 0 0;
+      font-size: 14px;
+    }
+
     @media (max-width: 768px) {
       .carousel-container {
         padding: 0 30px;
@@ -383,6 +432,15 @@
 
       .grid .card img {
         height: 200px;
+      }
+
+      .request-banner {
+        margin: 20px 10px;
+        padding: 30px 20px;
+      }
+
+      .request-banner h3 {
+        font-size: 20px;
       }
     }
 
@@ -435,6 +493,19 @@
 
       .grid .card img {
         height: 180px;
+      }
+
+      .request-banner {
+        padding: 20px 15px;
+      }
+
+      .request-banner h3 {
+        font-size: 18px;
+        letter-spacing: 1px;
+      }
+
+      .request-banner img {
+        height: 50px;
       }
     }
   </style>
@@ -613,9 +684,22 @@
       const container = element.querySelector(`.${className}`);
       if (textElement && container && textElement.scrollWidth > container.clientWidth) {
         textElement.classList.add('scrolling');
+        textElement.setAttribute('data-text', textElement.textContent);
       } else if (textElement) {
         textElement.classList.remove('scrolling');
       }
+    };
+
+    const createRequestBanner = () => {
+      const banner = document.createElement('div');
+      banner.className = 'request-banner';
+      banner.onclick = () => window.open('https://t.me/c/2699698393/96', '_blank');
+      banner.innerHTML = `
+        <img src="photo_4994677211969728445_c.jpg" alt="2KO VIP Logo" onerror="this.style.display='none'">
+        <h3>Faça seu pedido</h3>
+        <p>Não encontrou o que procura? Clique aqui para solicitar!</p>
+      `;
+      return banner;
     };
 
     const createCard = (item) => {
@@ -630,6 +714,9 @@
       if (isFavorite) star.classList.add('favorited');
       star.onclick = (e) => toggleFavorite(item, star, e);
 
+      // Remove o tipo da meta (só deixa os gêneros)
+      const genreOnly = item.genero;
+
       card.innerHTML = `
         <img src="${item.banner}" alt="${item.titulo}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDIwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTUwIiBmaWxsPSIjNjY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0Ij5JbWFnZW0gbsOjbyBlbmNvbnRyYWRhPC90ZXh0Pgo8L3N2Zz4K'" />
         <div class="card-content">
@@ -637,7 +724,7 @@
             <span class="title-text">${item.titulo}</span>
           </div>
           <div class="meta">
-            <span class="meta-text">${item.tipo} | ${item.genero}</span>
+            <span class="meta-text">${genreOnly}</span>
           </div>
           <div class="description">${item.descricao}</div>
         </div>`;
@@ -656,7 +743,8 @@
     const renderCarousel = (containerId, items) => {
       const container = document.getElementById(containerId);
       if (!items || items.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum item encontrado.</p>';
+        container.innerHTML = '';
+        container.appendChild(createRequestBanner());
         return;
       }
       
@@ -669,7 +757,8 @@
     const renderGrid = (containerId, items) => {
       const container = document.getElementById(containerId);
       if (!items || items.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Nenhum item encontrado.</p>';
+        container.innerHTML = '';
+        container.appendChild(createRequestBanner());
         return;
       }
       
@@ -816,7 +905,8 @@
         renderAll();
       })
       .catch(err => {
-        document.getElementById('latest').innerHTML = '<p style="text-align: center; color: red; padding: 20px;">Erro ao carregar catálogo.</p>';
+        document.getElementById('latest').innerHTML = '';
+        document.getElementById('latest').appendChild(createRequestBanner());
         console.error('Erro:', err);
       });
   </script>
