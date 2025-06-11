@@ -283,12 +283,22 @@
       }
 
       .search-container input {
-        min-width: 150px;
+        min-width: 120px;
+        font-size: 12px;
+      }
+
+      .menu button {
+        padding: 6px 10px;
+        font-size: 12px;
       }
 
       .nav-btn {
         padding: 10px 8px;
         font-size: 14px;
+      }
+
+      header {
+        padding: 8px 15px;
       }
     }
 
@@ -302,11 +312,30 @@
       }
 
       .search-container input {
-        min-width: 120px;
+        min-width: 100px;
+        font-size: 11px;
+        padding: 6px;
+      }
+
+      .menu button {
+        padding: 5px 8px;
+        font-size: 11px;
       }
 
       .carousel-container {
         padding: 0 20px;
+      }
+
+      header {
+        padding: 8px 10px;
+      }
+
+      .search-container {
+        gap: 6px;
+      }
+
+      .menu {
+        gap: 5px;
       }
     }
   </style>
@@ -335,16 +364,20 @@
   </header>
 
   <div class="section">
-    <h2>🎬 Catálogo Completo</h2>
-    <div id="catalog" class="grid"></div>
-  </div>
-
-  <div class="section">
     <h2>📅 Últimos Adicionados</h2>
     <div class="carousel-container">
       <button class="nav-btn prev" onclick="scrollCarousel('latest', -1)">‹</button>
       <div id="latest" class="carousel"></div>
       <button class="nav-btn next" onclick="scrollCarousel('latest', 1)">›</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎬 Catálogo Completo</h2>
+    <div class="carousel-container">
+      <button class="nav-btn prev" onclick="scrollCarousel('catalog', -1)">‹</button>
+      <div id="catalog" class="carousel"></div>
+      <button class="nav-btn next" onclick="scrollCarousel('catalog', 1)">›</button>
     </div>
   </div>
 
@@ -408,14 +441,15 @@
     };
 
     const handleSearch = () => {
-      const query = document.getElementById('searchInput').value.toLowerCase();
+      const query = normalize(document.getElementById('searchInput').value);
       if (query === '') {
         filteredItems = [...allItems];
       } else {
         filteredItems = allItems.filter(item =>
-          item.titulo.toLowerCase().includes(query) ||
-          item.genero.toLowerCase().includes(query) ||
-          item.descricao.toLowerCase().includes(query)
+          normalize(item.titulo).includes(query) ||
+          normalize(item.genero).includes(query) ||
+          normalize(item.descricao).includes(query) ||
+          normalize(item.tipo).includes(query)
         );
       }
       renderAll();
@@ -504,19 +538,20 @@
     };
 
     const renderAll = () => {
-      // Grid principal
-      renderGrid('catalog', filteredItems);
-      
       // Últimos adicionados (primeiros 20 da lista reversa)
       renderCarousel('latest', filteredItems.slice(0, 20));
       
-      // Lançamentos recentes (filmes dos últimos 3 anos)
+      // Catálogo completo (agora como carrossel)
+      renderCarousel('catalog', filteredItems);
+      
+      // Lançamentos recentes (busca por ano na coluna descricao)
       const currentYear = new Date().getFullYear();
       const recentItems = filteredItems.filter(item => {
-        const yearMatch = item.descricao.match(/(\d{4})/);
-        if (yearMatch) {
-          const year = parseInt(yearMatch[1]);
-          return year >= currentYear - 3;
+        // Busca por padrões de ano: (2024), 2024, "2024"
+        const yearMatches = item.descricao.match(/(?:\(|\s|^)(\d{4})(?:\)|\s|$)/g);
+        if (yearMatches) {
+          const years = yearMatches.map(match => parseInt(match.replace(/\D/g, '')));
+          return years.some(year => year >= currentYear - 3 && year <= currentYear);
         }
         return false;
       });
@@ -604,13 +639,19 @@
         const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
 
-        allItems = rows.map(row => {
-          const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
-          genero.split(',').forEach(g => genres.add(g.trim()));
-          return { titulo, tipo, genero, banner, descricao, link };
-        }).reverse(); // Reverse para mostrar últimos adicionados primeiro
+        // Remove primeira linha se for cabeçalho
+        const dataRows = rows[0]?.c?.[0]?.v === 'titulo' || rows[0]?.c?.[0]?.v === 'Titulo' ? rows.slice(1) : rows;
 
-        filteredItems = [...allItems];
+        allItems = dataRows.map(row => {
+          const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
+          if (titulo && tipo && genero) { // Só adiciona se tiver dados essenciais
+            genero.split(',').forEach(g => genres.add(g.trim()));
+            return { titulo, tipo, genero, banner, descricao, link };
+          }
+          return null;
+        }).filter(item => item !== null).reverse(); // Remove itens nulos e reverte
+
+        filteredItems = [...allItems]; // Inicializa sem filtros
 
         // Adiciona botões de gênero ao popup
         const genreButtonsContainer = document.getElementById('genreButtons');
@@ -624,7 +665,7 @@
         renderAll();
       })
       .catch(err => {
-        document.getElementById('catalog').innerHTML = '<p style="text-align: center; color: red; padding: 20px;">Erro ao carregar catálogo.</p>';
+        document.getElementById('latest').innerHTML = '<p style="text-align: center; color: red; padding: 20px;">Erro ao carregar catálogo.</p>';
         console.error('Erro:', err);
       });
   </script>
