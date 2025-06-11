@@ -232,6 +232,9 @@
     .title-text {
       white-space: nowrap;
       display: inline-block;
+    }
+
+    .title-text.scrolling {
       animation: scroll-text 8s linear infinite;
     }
 
@@ -245,10 +248,25 @@
       font-size: 12px;
       color: #aaa;
       margin-bottom: 5px;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
       flex-shrink: 0;
+      height: 16px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .meta-text {
+      white-space: nowrap;
+      display: inline-block;
+    }
+
+    .meta-text.scrolling {
+      animation: scroll-meta 10s linear infinite;
+    }
+
+    @keyframes scroll-meta {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(calc(-100% + 170px)); }
+      100% { transform: translateX(0); }
     }
 
     .description {
@@ -287,7 +305,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
       padding: 20px;
     }
@@ -295,6 +313,8 @@
     .grid .card {
       margin-right: 0;
       height: 400px;
+      flex: none;
+      width: 100%;
     }
 
     #favoritesSection {
@@ -308,6 +328,15 @@
       
       .card {
         flex: 0 0 160px;
+        height: 320px;
+      }
+
+      .card img {
+        height: 240px;
+      }
+
+      .card-content {
+        height: 80px;
       }
 
       .search-container input {
@@ -325,18 +354,41 @@
         font-size: 14px;
       }
 
-      header {
+      .header {
         padding: 8px 15px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 15px;
+      }
+
+      .grid .card {
+        height: 320px;
+      }
+
+      .grid .card img {
+        height: 240px;
+      }
+
+      .grid .card .card-content {
+        height: 80px;
       }
     }
 
     @media (max-width: 480px) {
       .card {
         flex: 0 0 140px;
+        height: 280px;
       }
 
       .card img {
         height: 200px;
+      }
+
+      .card-content {
+        height: 80px;
       }
 
       .search-container input {
@@ -364,6 +416,24 @@
 
       .menu {
         gap: 5px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .grid .card {
+        height: 280px;
+      }
+
+      .grid .card img {
+        height: 200px;
+      }
+
+      .grid .card .card-content {
+        height: 80px;
       }
     }
   </style>
@@ -521,6 +591,16 @@
       }
     };
 
+    const checkTextOverflow = (element, className = 'title') => {
+      const textElement = element.querySelector(`.${className}-text`);
+      const container = element.querySelector(`.${className}`);
+      if (textElement && container && textElement.scrollWidth > container.clientWidth) {
+        textElement.classList.add('scrolling');
+      } else if (textElement) {
+        textElement.classList.remove('scrolling');
+      }
+    };
+
     const createCard = (item) => {
       const isFavorite = localStorage.getItem('fav_' + item.titulo);
       const card = document.createElement('div');
@@ -539,11 +619,19 @@
           <div class="title">
             <span class="title-text">${item.titulo}</span>
           </div>
-          <div class="meta">${item.tipo} | ${item.genero}</div>
+          <div class="meta">
+            <span class="meta-text">${item.tipo} | ${item.genero}</span>
+          </div>
           <div class="description">${item.descricao}</div>
         </div>`;
       
       card.appendChild(star);
+      
+      // Verifica overflow após o card ser adicionado ao DOM
+      setTimeout(() => {
+        checkTextOverflow(card, 'title');
+        checkTextOverflow(card, 'meta');
+      }, 100);
       
       return card;
     };
