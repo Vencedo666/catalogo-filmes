@@ -6,7 +6,7 @@
   <title>2KO VIP - Catálogo de Filmes</title>
   <style>
     :root {
-      --bg-main: #ffcc00; /* Novo tom de dourado aproximado da imagem */
+      --bg-main: #f1cf60;
       --text-light: #fff;
       --card-bg: #222;
       --card-hover: #333;
@@ -28,6 +28,7 @@
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
+      position: relative;
     }
 
     header img {
@@ -54,7 +55,7 @@
       display: none;
       position: absolute;
       top: 60px;
-      left: 20px;
+      left: 120px;
       background: #000;
       border: 1px solid #fff;
       padding: 10px;
@@ -91,6 +92,7 @@
       display: flex;
       scroll-snap-type: x mandatory;
       padding: 10px;
+      position: relative;
     }
 
     .carousel::-webkit-scrollbar {
@@ -130,6 +132,12 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      animation: marquee 8s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
     }
 
     .meta, .description {
@@ -143,13 +151,34 @@
       right: 5px;
       font-size: 20px;
       color: var(--star-default);
-      border: 2px solid #fff;
-      border-radius: 0;
-      padding: 2px;
+      border: none;
+      text-shadow: 1px 1px 2px black;
     }
 
     .star.favorited {
       color: var(--star-favorite);
+      text-shadow: 0 0 4px white, 1px 1px 2px black;
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      font-size: 20px;
+      padding: 5px;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .carousel-nav.left {
+      left: 0;
+    }
+
+    .carousel-nav.right {
+      right: 0;
     }
 
     @media (max-width: 768px) {
@@ -190,157 +219,170 @@
   <h2 style="padding: 10px">⭐ Meus Favoritos</h2>
   <div id="favorites" class="carousel"></div>
   <div id="byGenreContainer"></div>
+<script>
+  const catalog = document.getElementById("catalog");
+  const favoritesCarousel = document.getElementById("favorites");
+  const byYearCarousel = document.getElementById("byYear");
+  const byGenreContainer = document.getElementById("byGenreContainer");
+  const popup = document.getElementById("genrePopup");
 
-  <script>
-    const sheetId = '1zWKuIBt1Fy2c-CZ2MjZsuWWtBRn8jDq3Uh4KUI7EGPk';
-    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+  let allItems = [];
+  let showingFavorites = false;
 
-    let allItems = [];
-    let genres = new Set();
-
-    const normalize = str => str.toLowerCase().normalize('NFD').replace(/[^\w\s]|_/g, '').replace(/[\u0300-\u036f]/g, '');
-
-    const togglePopup = () => {
-      const popup = document.getElementById('genrePopup');
-      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-    };
-
-    const clearFilters = () => {
+  async function fetchCatalog() {
+    try {
+      const res = await fetch('catalogo.json'); // atualize para o caminho do seu JSON
+      const data = await res.json();
+      allItems = data.reverse();
       render(allItems);
+    } catch (err) {
+      catalog.innerHTML = "<p>Erro ao carregar o catálogo.</p>";
+    }
+  }
+
+  function render(items) {
+    catalog.innerHTML = '';
+    favoritesCarousel.innerHTML = '';
+    byYearCarousel.innerHTML = '';
+    byGenreContainer.innerHTML = '';
+
+    if (!items.length) {
+      catalog.innerHTML = `<div style="padding:20px;">Nenhum resultado encontrado. <a href="https://t.me/c/2699698393/96" target="_blank">📩 Peça seu filme</a></div>`;
+      return;
+    }
+
+    const favorites = items.filter(i => localStorage.getItem(i.titulo));
+    const byYear = groupByYear(items);
+    const byGenre = groupByGenre(items);
+
+    items.forEach(item => catalog.appendChild(createCard(item)));
+
+    favorites.forEach(item => favoritesCarousel.appendChild(createCard(item)));
+
+    Object.entries(byYear).forEach(([year, yearItems]) => {
+      byYearCarousel.appendChild(createCarouselRow(`📅 Lançamentos ${year}`, yearItems));
+    });
+
+    Object.entries(byGenre).forEach(([genre, genreItems]) => {
+      if (genreItems.length >= 3) {
+        byGenreContainer.appendChild(createCarouselRow(`🎭 ${genre}`, genreItems));
+      }
+    });
+  }
+
+  function groupByYear(items) {
+    const years = {};
+    items.forEach(item => {
+      const match = item.descricao.match(/20\d{2}/);
+      if (match) {
+        const year = match[0];
+        if (!years[year]) years[year] = [];
+        years[year].push(item);
+      }
+    });
+    return years;
+  }
+
+  function groupByGenre(items) {
+    const genres = {};
+    items.forEach(item => {
+      item.genero.split(',').forEach(g => {
+        const genre = g.trim();
+        if (!genres[genre]) genres[genre] = [];
+        genres[genre].push(item);
+      });
+    });
+    return genres;
+  }
+
+  function createCard(item) {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    const star = document.createElement("div");
+    star.className = "star";
+    star.innerHTML = "★";
+    if (localStorage.getItem(item.titulo)) {
+      star.classList.add("favorited");
+    }
+
+    star.onclick = (e) => {
+      e.stopPropagation();
+      if (localStorage.getItem(item.titulo)) {
+        localStorage.removeItem(item.titulo);
+        star.classList.remove("favorited");
+      } else {
+        localStorage.setItem(item.titulo, true);
+        star.classList.add("favorited");
+      }
     };
 
-    const filterByType = type => {
-      const filtered = allItems.filter(item => normalize(item.tipo) === normalize(type));
-      render(filtered);
+    div.onclick = () => {
+      window.open(item.link, "_blank");
     };
 
-    const showFavorites = () => {
+    div.innerHTML = `
+      <img src="${item.banner}" alt="${item.titulo}">
+      <div class="card-content">
+        <div class="title">${item.titulo}</div>
+        <div class="meta">${item.descricao}</div>
+      </div>
+    `;
+    div.appendChild(star);
+    return div;
+  }
+
+  function createCarouselRow(title, items) {
+    const section = document.createElement("section");
+    section.innerHTML = `<h2 style="padding: 10px">${title}</h2>`;
+    const carousel = document.createElement("div");
+    carousel.className = "carousel";
+
+    const left = document.createElement("button");
+    left.className = "carousel-nav left";
+    left.innerHTML = "⮜";
+    left.onclick = () => carousel.scrollBy({ left: -300, behavior: 'smooth' });
+
+    const right = document.createElement("button");
+    right.className = "carousel-nav right";
+    right.innerHTML = "⮞";
+    right.onclick = () => carousel.scrollBy({ left: 300, behavior: 'smooth' });
+
+    items.forEach(i => carousel.appendChild(createCard(i)));
+
+    section.appendChild(left);
+    section.appendChild(carousel);
+    section.appendChild(right);
+
+    return section;
+  }
+
+  function togglePopup() {
+    popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function clearFilters() {
+    render(allItems);
+    togglePopup();
+  }
+
+  function filterByType(type) {
+    const filtered = allItems.filter(i => i.tipo === type);
+    render(filtered);
+    togglePopup();
+  }
+
+  function showFavorites() {
+    if (!showingFavorites) {
       const favItems = allItems.filter(i => localStorage.getItem(i.titulo));
       render(favItems);
-    };
+    } else {
+      render(allItems);
+    }
+    showingFavorites = !showingFavorites;
+  }
 
-    const renderCarousel = (containerId, items) => {
-      const container = document.getElementById(containerId);
-      if (!items || items.length === 0) {
-        container.innerHTML = '<p>Nenhum item encontrado.</p>';
-        return;
-      }
-      container.innerHTML = '';
-      items.forEach(item => {
-        const isFavorite = localStorage.getItem(item.titulo);
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.onclick = () => window.open(item.link, '_blank');
-        const star = document.createElement('span');
-        star.className = 'star';
-        star.innerHTML = '★';
-        if (isFavorite) star.classList.add('favorited');
-        star.onclick = e => {
-          e.stopPropagation();
-          star.classList.toggle('favorited');
-          if (localStorage.getItem(item.titulo)) {
-            localStorage.removeItem(item.titulo);
-          } else {
-            localStorage.setItem(item.titulo, true);
-          }
-        };
-        card.innerHTML = `
-          <img src="${item.banner}" alt="${item.titulo}" />
-          <div class="card-content">
-            <div class="title">${item.titulo}</div>
-            <div class="meta">${item.tipo} | ${item.genero}</div>
-            <div class="description">${item.descricao}</div>
-          </div>`;
-        card.appendChild(star);
-        container.appendChild(card);
-      });
-    };
-
-    const render = items => {
-      renderCarousel('catalog', items);
-      renderCarousel('favorites', items.filter(i => localStorage.getItem(i.titulo)));
-      renderCarousel('byYear', items.filter(i => i.descricao.match(/20\d{2}/)));
-
-      const byGenre = {};
-      items.forEach(i => {
-        i.genero.split(',').forEach(g => {
-          const genre = g.trim();
-          if (!byGenre[genre]) byGenre[genre] = [];
-          byGenre[genre].push(i);
-        });
-      });
-      const container = document.getElementById('byGenreContainer');
-      container.innerHTML = '';
-      Object.entries(byGenre).forEach(([genre, items]) => {
-        if (items.length >= 3) {
-          const title = document.createElement('h2');
-          title.style.padding = '10px';
-          title.textContent = genre;
-          const carousel = document.createElement('div');
-          carousel.className = 'carousel';
-          items.forEach(item => {
-            const isFavorite = localStorage.getItem(item.titulo);
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.onclick = () => window.open(item.link, '_blank');
-            const star = document.createElement('span');
-            star.className = 'star';
-            star.innerHTML = '★';
-            if (isFavorite) star.classList.add('favorited');
-            star.onclick = e => {
-              e.stopPropagation();
-              star.classList.toggle('favorited');
-              if (localStorage.getItem(item.titulo)) {
-                localStorage.removeItem(item.titulo);
-              } else {
-                localStorage.setItem(item.titulo, true);
-              }
-            };
-            card.innerHTML = `
-              <img src="${item.banner}" alt="${item.titulo}" />
-              <div class="card-content">
-                <div class="title">${item.titulo}</div>
-                <div class="meta">${item.tipo} | ${item.genero}</div>
-                <div class="description">${item.descricao}</div>
-              </div>`;
-            card.appendChild(star);
-            carousel.appendChild(card);
-          });
-          container.appendChild(title);
-          container.appendChild(carousel);
-        }
-      });
-    };
-
-    fetch(sheetUrl)
-      .then(res => res.text())
-      .then(text => {
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows.slice(1);
-
-        allItems = rows.reverse().map(row => {
-          const [titulo, tipo, genero, banner, descricao, link] = row.c.map(cell => cell?.v || '');
-          genero.split(',').forEach(g => genres.add(g.trim()));
-          return { titulo, tipo, genero, banner, descricao, link };
-        });
-
-        const popup = document.getElementById('genrePopup');
-        genres.forEach(g => {
-          const btn = document.createElement('button');
-          btn.textContent = g;
-          btn.onclick = () => {
-            const filtered = allItems.filter(i => i.genero.toLowerCase().includes(g.toLowerCase()));
-            render(filtered);
-          };
-          popup.appendChild(btn);
-        });
-
-        render(allItems);
-      })
-      .catch(err => {
-        document.getElementById('catalog').innerHTML = '<p>Erro ao carregar catálogo.</p>';
-        console.error('Erro:', err);
-      });
-  </script>
+  window.onload = fetchCatalog;
+</script>
 </body>
 </html>
